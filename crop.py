@@ -1,3 +1,6 @@
+#this program will take a cropped photo from a video, if one draws a diagonal across what one wants to crop. to start, q
+# has to be pressed, and when the object slows down and stops (diagonal is completely drawn) the crop is made.
+
 # import the necessary packages
 from collections import deque
 import numpy as np
