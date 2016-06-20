@@ -6,7 +6,7 @@ import imutils
 import cv2
 from espeak import espeak
 import time
-
+rot=0
 def rotate(frame):
 
 	# construct the argument parse and parse the arguments
@@ -19,18 +19,14 @@ def rotate(frame):
 	
 	# define the lower and upper boundaries of the "green"
 	# ball in the HSV color space
-	greenLower = (160,140,100)
-	greenUpper = (180,255,255)
+	lower = (160,140,100)
+	upper = (180,255,255)
 	 
-	# initialize the list of tracked points, the frame counter,
+	# initialize the list of tracked points, 
 	# and the coordinate deltas
 	pts = deque(maxlen=args["buffer"])
-	counter = 0
 	(dX, dY) = (0, 0)
-	direction = ""
-	k=1
-	
-	a1=1
+
 	
 	# if a video path was not supplied, grab the reference
 	# to the webcam
@@ -43,7 +39,7 @@ def rotate(frame):
 	
 	
 	espeak.synth("Hi, I am Jarvis. Your life, or the bottom left corner of your page. He  he  hee hee heeeee..")
-	time.sleep(6)
+	time.sleep(5)
 		
 	# keep looping
 
@@ -56,12 +52,7 @@ def rotate(frame):
 		# if we are viewing a video and we did not grab a frame,
 		# then we have reached the end of the video
 		if args.get("video") and not grabbed:
-			break
-		frame2=cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-		rows,cols = frame2.shape
-		if a1==1:
-			M2 = cv2.getRotationMatrix2D((cols/2,rows/2),0,1)
-		
+			break		
 
 		# resize the frame, blur it, and convert it to the HSV
 		# color space
@@ -69,13 +60,12 @@ def rotate(frame):
 		blurred = cv2.GaussianBlur(frame, (11, 11), 0)
 		hsv = cv2.cvtColor(blurred, cv2.COLOR_BGR2HSV)
 	 
-		# construct a mask for the color "green", then perform
+		# construct a mask for required colour, then perform
 		# a series of dilations and erosions to remove any small
 		# blobs left in the mask
-		mask = cv2.inRange(hsv, greenLower, greenUpper)
+		mask = cv2.inRange(hsv, lower, upper)
 		mask = cv2.erode(mask, None, iterations=2)
 		mask = cv2.dilate(mask, None, iterations=2)
-		cv2.imshow('mask', mask)
 	
 		# find contours in the mask and initialize the current
 		# (x, y) center of the ball
@@ -92,10 +82,6 @@ def rotate(frame):
 			M = cv2.moments(c)
 	
 			center = (int(M["m10"] / M["m00"]), int(M["m01"] / M["m00"]))
-			if k==1 :
-				a = int(M["m10"] / M["m00"])
-				b = int(M["m01"] / M["m00"])
-				k=0
 	
 			# only proceed if the radius meets a minimum size
 			if radius > 10:
@@ -103,46 +89,38 @@ def rotate(frame):
 				pts.appendleft(center)
 		
 		if len(pts)>10 :
-			# loop over the set of tracked points
-			for i in np.arange(1, len(pts)):
-				# if either of the tracked points are None, ignore
-				# them
-				if pts[i - 1] is None or pts[i] is None:
-					continue
-	
-				# check to see if enough points have been accumulated in
-				# the buffer
-				if i == 1 and pts[-10] is not None:
+			if pts[i] is not None:
+
+				if pts[-10] is not None:
 					# compute the difference between the x and y
 					# coordinates
-					dX = pts[-10][0] - pts[i][0]
-					dY = pts[-10][1] - pts[i][1]	
+					dX = pts[-10][0] - pts[1][0]
+					dY = pts[-10][1] - pts[1][1]	
 	
-
-		# increment the frame counter
 		
 		key = cv2.waitKey(1) & 0xFF
-		counter += 1
+
 	
-		# if the 'q' key is pressed, or if the object slows down, loop is exited and the cropped part is displayed
+		# if the 'q' key is pressed, or if the object slows down, the variable is updated and the function ends
 		if ((key == ord('q')) or  (len(pts)>30 and np.abs(dX) < 25 and np.abs(dY) < 25)):
 			c = int(M["m10"] / M["m00"])
 		        d = int(M["m01"] / M["m00"])
-			if c < 300.0 and d < 225.0:
-				#M2 = cv2.getRotationMatrix2D((cols/2,rows/2),90,1)
-				return 1;
+			if c < 300.0 and d < 225.0:		#the values are dependant upon the pixels of the frame
+				rot= 1;
+				return cv2.getRotationMatrix2D((cols/2,rows/2),90,1);
 				
-			if c < 300.0 and d >= 225.0:
-				#M2 = cv2.getRotationMatrix2D((cols/2,rows/2),0,1)
-				return 2;
+			elif c < 300.0 and d >= 225.0:
+				rot= 2;
+				return cv2.getRotationMatrix2D((cols/2,rows/2),0,1);
 	
-			if c >= 300.0 and d < 225.0:
-		 		#M2 = cv2.getRotationMatrix2D((cols/2,rows/2),180,1)
-				return 3;	
+			elif c >= 300.0 and d < 225.0:
+				rot=3;
+				return cv2.getRotationMatrix2D((cols/2,rows/2),180,1);
 
-			if c >= 300.0 and d >= 225.0:
-				#M2 = cv2.getRotationMatrix2D((cols/2,rows/2),270,1)
-				return 4;
-
-	# cleanup the camera and close any open windows
-	camera.release()
+			elif c >= 300.0 and d >= 225.0:
+				rot=4;
+				return cv2.getRotationMatrix2D((cols/2,rows/2),270,1);
+			# cleanup the camera and close any open windows
+			camera.release()
+			return;
+	
