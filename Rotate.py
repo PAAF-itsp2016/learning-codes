@@ -107,20 +107,24 @@ def rotate(frame):
 		        d = int(M["m01"] / M["m00"])
 			if c < 300.0 and d < 225.0:		#the values are dependant upon the pixels of the frame
 				rot= 1;
+				camera.release()
 				return cv2.getRotationMatrix2D((cols/2,rows/2),90,1);
 				
 			elif c < 300.0 and d >= 225.0:
 				rot= 2;
+				camera.release()
 				return cv2.getRotationMatrix2D((cols/2,rows/2),0,1);
 	
 			elif c >= 300.0 and d < 225.0:
 				rot=3;
+				camera.release()
 				return cv2.getRotationMatrix2D((cols/2,rows/2),180,1);
 
 			elif c >= 300.0 and d >= 225.0:
 				rot=4;
+				camera.release()
 				return cv2.getRotationMatrix2D((cols/2,rows/2),270,1);
 			# cleanup the camera and close any open windows
-			camera.release()
-			return;
+			
+			
 	
